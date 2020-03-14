@@ -158,46 +158,44 @@ window.onload = function() {
             var saveData = {savedBunnies: [], savedWolves: [], savedDay: gameEngine.entities[0].day};
             for (var i = 0; i < bunnies.length; i++) {
                 if (bunnies[i].removeFromWorld == false) {
-                    var b = new Bunny(gameEngine);
-                    b.x = bunnies[i].x;
-                    b.y = bunnies[i].y;
-                    b.direction = bunnies[i].direction;
-                    b.birthRate = bunnies[i].birthRate;
-                    b.acceleration = bunnies[i].acceleration;
-                    b.back = bunnies[i].back;
-                    b.lifeTime = bunnies[i].lifeTime;
-                    b.gaveBirth = bunnies[i].gaveBirth;
-                    saveData.savedBunnies.push(b);
-                    console.log("bunny " + i);
+                    var bunny = bunnies[i];
+                    saveData.savedBunnies.push ({
+                        x: bunny.x,
+                        y: bunny.y,
+                        back: bunny.back,
+                        direction: bunny.direction,
+                        lifeTime: bunny.lifeTime,
+                        gaveBirth: bunny.gaveBirth,
+                    });
                 }
             }
             for (var i = 0; i < wolves.length; i++) {
                 if (wolves[i].removeFromWorld == false) {
-                    var b = new Wolf(gameEngine);
-                    b.x = wolves[i].x;
-                    b.y = wolves[i].y;
-                    b.direction = wolves[i].direction;
-                    b.birthRate = wolves[i].birthRate;
-                    b.back = wolves[i].back;
-                    b.lifeTime = wolves[i].lifeTime;
-                    b.gaveBirth = wolves[i].gaveBirth;
-                    saveData.savedWolves.push(b);
-                    console.log("wolf " + i);
+                    var wolf = wolves[i];
+                    saveData.savedWolves.push ({
+                        x: wolf.x,
+                        y: wolf.y,
+                        back: wolf.back,
+                        direction: wolf.direction,
+                        lifeTime: wolf.lifeTime,
+                        gaveBirth: wolf.gaveBirth,
+                        energy: wolf.energy
+                    });
                 }
             }
-            console.log("saved bunnies and wolves");
             socket.emit("save", { studentname: "Minh Nguyen", statename: "MinhState", data: saveData});
             console.log(saveData);
         };
         
 
         loadButton.onclick = function() {
-            console.log("load");
-            socket.emit("load", { studentname: "Minh Nguyen", statename: "MinhSate"});
+            console.log("loading");
+            socket.emit("load", { studentname: "Minh Nguyen", statename: "MinhState"});
         };
 
         socket.on("load", function(data) {
             console.log(data);
+
             var bunniesState = data.data.savedBunnies;
             var wolvesState = data.data.savedWolves;
             
@@ -205,28 +203,26 @@ window.onload = function() {
             bunnies = [];
             gameEngine.entities[0].day = data.data.savedDay;
 
-            for (var i = 0; i < bunniesState; i++) {
+            for (var i = 0; i < bunniesState.length; i++) {
                 var b = new Bunny(gameEngine);
                 b.x = bunniesState[i].x;
                 b.y = bunniesState[i].y;
                 b.direction = bunniesState[i].direction;
-                b.birthRate = bunniesState[i].birthRate;
-                b.acceleration = bunniesState[i].acceleration;
                 b.back = bunniesState[i].back;
                 b.lifeTime = bunniesState[i].lifeTime;
                 b.gaveBirth = bunniesState[i].gaveBirth;
-                bunnies.push(b);                
+                bunnies.push(b); 
             }
-            for (var i = 0; i < wolvesState; i++) {
+            for (var i = 0; i < wolvesState.length; i++) {
                 var b = new Wolf(gameEngine);
                 b.x = wolvesState[i].x;
                 b.y = wolvesState[i].y;
                 b.direction = wolvesState[i].direction;
-                b.birthRate = wolvesState[i].birthRate;
                 b.back = wolvesState[i].back;
                 b.lifeTime = wolvesState[i].lifeTime;
                 b.gaveBirth = wolvesState[i].gaveBirth;
-                wolves.push(b);                
+                b.energy = wolvesState[i].energy
+                wolves.push(b);         
             }
         });
 
