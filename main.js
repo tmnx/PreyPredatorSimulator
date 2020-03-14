@@ -116,27 +116,120 @@ var ASSET_MANAGER = new AssetManager();
 ASSET_MANAGER.queueDownload("./img/bunny26x17.png");
 ASSET_MANAGER.queueDownload("./img/wolf32x28.png");
 
-ASSET_MANAGER.downloadAll(function () {
-    console.log("starting up da sheild");
-    var canvas = document.getElementById('gameWorld');
-    var ctx = canvas.getContext('2d');
+var socket = io.connect("http://24.16.255.56:8888");
 
-    var gameEngine = new GameEngine();
 
-    for (var i = 0; i < bunnyInitPopulation; i++) {
-        var bunny = new Bunny(gameEngine);
-        // gameEngine.addEntity(bunny);
-        bunnies.push(bunny);
-    }
+window.onload = function() {
+    ASSET_MANAGER.downloadAll(function () {
 
-    for (var i = 0; i < wolfInitPopulation; i++) {
-        var wolf = new Wolf(gameEngine);
-        // gameEngine.addEntity(wolf);
-        wolves.push(wolf);
-    }
+        socket.on("connect", function () {
+            console.log("Socket connected.")
+        });
+        socket.on("disconnect", function () {
+            console.log("Socket disconnected.")
+        });
 
-    gameEngine.addEntity(new DisplayStats(gameEngine));
+        console.log("starting up da sheild");
 
-    gameEngine.init(ctx);
-    gameEngine.start();
-});
+        var canvas = document.getElementById('gameWorld');
+        var ctx = canvas.getContext('2d');
+    
+        var gameEngine = new GameEngine();
+    
+        for (var i = 0; i < bunnyInitPopulation; i++) {
+            var bunny = new Bunny(gameEngine);
+            bunnies.push(bunny);
+        }
+    
+        for (var i = 0; i < wolfInitPopulation; i++) {
+            var wolf = new Wolf(gameEngine);
+            wolves.push(wolf);
+        }
+        gameEngine.addEntity(new DisplayStats(gameEngine));
+
+        gameEngine.init(ctx);
+        gameEngine.start();
+
+        var saveButton = document.getElementById("save");
+        var loadButton = document.getElementById("load");
+
+        saveButton.onclick = function() {
+            console.log("saving");
+            var saveData = {savedBunnies: [], savedWolves: [], savedDay: gameEngine.entities[0].day};
+            for (var i = 0; i < bunnies.length; i++) {
+                if (bunnies[i].removeFromWorld == false) {
+                    var b = new Bunny(gameEngine);
+                    b.x = bunnies[i].x;
+                    b.y = bunnies[i].y;
+                    b.direction = bunnies[i].direction;
+                    b.birthRate = bunnies[i].birthRate;
+                    b.acceleration = bunnies[i].acceleration;
+                    b.back = bunnies[i].back;
+                    b.lifeTime = bunnies[i].lifeTime;
+                    b.gaveBirth = bunnies[i].gaveBirth;
+                    saveData.savedBunnies.push(b);
+                    console.log("bunny " + i);
+                }
+            }
+            for (var i = 0; i < wolves.length; i++) {
+                if (wolves[i].removeFromWorld == false) {
+                    var b = new Wolf(gameEngine);
+                    b.x = wolves[i].x;
+                    b.y = wolves[i].y;
+                    b.direction = wolves[i].direction;
+                    b.birthRate = wolves[i].birthRate;
+                    b.back = wolves[i].back;
+                    b.lifeTime = wolves[i].lifeTime;
+                    b.gaveBirth = wolves[i].gaveBirth;
+                    saveData.savedWolves.push(b);
+                    console.log("wolf " + i);
+                }
+            }
+            console.log("saved bunnies and wolves");
+            socket.emit("save", { studentname: "Minh Nguyen", statename: "MinhState", data: saveData});
+            console.log(saveData);
+        };
+        
+
+        loadButton.onclick = function() {
+            console.log("load");
+            socket.emit("load", { studentname: "Minh Nguyen", statename: "MinhSate"});
+        };
+
+        socket.on("load", function(data) {
+            console.log(data);
+            var bunniesState = data.data.savedBunnies;
+            var wolvesState = data.data.savedWolves;
+            
+            wolves = [];
+            bunnies = [];
+            gameEngine.entities[0].day = data.data.savedDay;
+
+            for (var i = 0; i < bunniesState; i++) {
+                var b = new Bunny(gameEngine);
+                b.x = bunniesState[i].x;
+                b.y = bunniesState[i].y;
+                b.direction = bunniesState[i].direction;
+                b.birthRate = bunniesState[i].birthRate;
+                b.acceleration = bunniesState[i].acceleration;
+                b.back = bunniesState[i].back;
+                b.lifeTime = bunniesState[i].lifeTime;
+                b.gaveBirth = bunniesState[i].gaveBirth;
+                bunnies.push(b);                
+            }
+            for (var i = 0; i < wolvesState; i++) {
+                var b = new Wolf(gameEngine);
+                b.x = wolvesState[i].x;
+                b.y = wolvesState[i].y;
+                b.direction = wolvesState[i].direction;
+                b.birthRate = wolvesState[i].birthRate;
+                b.back = wolvesState[i].back;
+                b.lifeTime = wolvesState[i].lifeTime;
+                b.gaveBirth = wolvesState[i].gaveBirth;
+                wolves.push(b);                
+            }
+        });
+
+    });
+}
+
